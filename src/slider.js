@@ -1,3 +1,4 @@
+'use strict';
 /*
  jQuery UI Slider plugin wrapper
 */
@@ -9,8 +10,8 @@ angular.module('ui.slider', []).value('uiSliderConfig',{}).directive('uiSlider',
             return function (scope, elm, attrs, ngModel) {
 
                 function parseNumber(n, decimals) {
-                    return (decimals) ? parseFloat(n) : parseInt(n);
-                };
+                    return (decimals) ? parseFloat(n) : parseInt(n, 10);
+                }
 
                 var options = angular.extend(scope.$eval(attrs.uiSlider) || {}, uiSliderConfig);
                 // Object holding range values
@@ -51,6 +52,7 @@ angular.module('ui.slider', []).value('uiSliderConfig',{}).directive('uiSlider',
                     attrs.$observe(property, function(newVal) {
                         if (!!newVal) {
                             init();
+                            options[property] = parseNumber(newVal, useDecimals);
                             elm.slider('option', property, parseNumber(newVal, useDecimals));
                             ngModel.$render();
                         }
@@ -64,7 +66,7 @@ angular.module('ui.slider', []).value('uiSliderConfig',{}).directive('uiSlider',
                 // Watch ui-slider (byVal) for changes and update
                 scope.$watch(attrs.uiSlider, function(newVal) {
                     init();
-                    if(newVal != undefined) {
+                    if(newVal !== undefined) {
                       elm.slider('option', newVal);
                     }
                 }, true);
@@ -74,6 +76,9 @@ angular.module('ui.slider', []).value('uiSliderConfig',{}).directive('uiSlider',
 
                 // Update model value from slider
                 elm.bind('slide', function(event, ui) {
+                    if(scope.$eval(attrs.readonly)){
+                        return false;
+                    }
                     ngModel.$setViewValue(ui.values || ui.value);
                     scope.$apply();
                 });
@@ -104,11 +109,13 @@ angular.module('ui.slider', []).value('uiSliderConfig',{}).directive('uiSlider',
                         // Check min and max range values
                         if (ngModel.$viewValue[0] > ngModel.$viewValue[1]) {
                             // Min value should be less to equal to max value
-                            if (prevRangeValues.min >= ngModel.$viewValue[1])
+                            if (prevRangeValues.min >= ngModel.$viewValue[1]){
                                 ngModel.$viewValue[0] = prevRangeValues.min;
+                            }
                             // Max value should be less to equal to min value
-                            if (prevRangeValues.max <= ngModel.$viewValue[0])
+                            if (prevRangeValues.max <= ngModel.$viewValue[0]){
                                 ngModel.$viewValue[1] = prevRangeValues.max;
+                            }
                         }
 
                         // Store values for later user
